@@ -22,5 +22,9 @@ module.exports = (sequelize, DataTypes) => {
     sequelize,
     modelName: 'User',
   });
+  // One to Many association between User + Course
+  User.associate = (models) => {
+    User.hasMany(models.Course, { foreignKey: 'userId' });
+  }
   return User;
 };
