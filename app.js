@@ -5,7 +5,8 @@ const express = require('express');
 const morgan = require('morgan');
 // load sequelize per instructions
 const { Sequelize } = require('sequelize');
-
+// importing routes, the new file created
+const routes = require('./routes');
 
 
 // variable to enable global error logging
@@ -38,6 +39,13 @@ const sequelize = new Sequelize({
     console.error("Error connecting to the database: ", error);
   }
 })();
+
+/* Step 6 + 7, creating User and Course routes
+Create a routes file to keep everything organized
+import routes into app
+set app.get to point to the routes.
+ */
+app.use('/api', routes);
 
 // send 404 if no other route matched
 app.use((req, res) => {
