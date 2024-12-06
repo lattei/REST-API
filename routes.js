@@ -23,7 +23,7 @@ function asyncHandler(cb) {
 */
 
 // Read route - GET User; this might need to use middleware to authenticate the req... basic auth??
-router.get('/users', asyncHandler(async (req, res) => {
+router.get('/users', /* Placeholder for Auth  */ asyncHandler(async (req, res) => {
     const user = req.currentUser;
     //ensuring that this returns the specific status code
     res.json({
@@ -57,6 +57,8 @@ CREATE: POST a new course, location to header of URI, 201 response /api/courses
 UPDATE: PUT a new course, return 204 /api/courses/:id 
 DELETE: DELETE a course return 204 response /api/courses/:id
  */
+
+// Reads all courses and corresponding users, returns a 200 status
 router.get('/courses', asyncHandler(async (req, res) => {
     const courses = await Course.findAll({
         attributes: { exclude: ['createdAt', 'updatedAt'] },
@@ -67,9 +69,72 @@ router.get('/courses', asyncHandler(async (req, res) => {
             },
         ],
     });
-    res.json(courses);
+    res.status(200).json(courses);
+}));
+
+//Reads ONE course with corresponding users, returns a status code 200 with /courses/:id
+router.get('/courses/:id', asyncHandler(async (req, res) => {
+    const course = await Course.findByPk(req.params.id, {
+        attributes: { exclude: ['createdAt', 'updatedAt'] },
+        include: [
+            {
+                model: User,
+                attributes: ['id', 'firstName', 'lastName', 'emailAddress']
+            },
+        ],
+    });
+    course ? res.status(200).json(course) : res.status(400).json({ message: 'Course not found!'});
+}));
+
+//Creates a course location to header of URI, 200 response /courses
+router.post('/courses', /*Placeholder for Auth */asyncHandler(async (req, res) => {
+    try {
+        const course = await Course.create(req.body);
+        res.status(201)
+        .location(`/api/courses/${course.id}`)
+        .end();
+    } catch (error) {
+        if (error.name === "SequelizeValidationError" || error.name === "SequelizeUniqueConstraintError") {
+            const errors = error.errors.map((err) => err.message);
+            res.status(400).json({ errors });
+        } else {
+            throw error;
+        }
+    }
 }));
 
 
+//Updates a course, returns a 204 status code /courses/:id
+router.put('/courses/:id', /*Placeholder for Auth */ asyncHandler(async (req, res) => {
+    const user = req.currentUser;
+    const course = await Course.findByPk(req.params.id);
+    if (course) {
+        if (course.userId === user.id) {
+            await course.update(req.body);
+            res.status(204).end();
+        } else {
+            res.status(403).json({ message: 'You are not authorized to update this course!' });
+        }
+    } else {
+        res.status(404).json({ message: 'Course not found!' });
+    }
+}));
+
+//Deletes a Course, returns 204 response /courses/:id
+router.delete('/courses/:id', /* Placeholder for Auth */ asyncHandler(async (req, res) => {
+    const user = req.currentUser;
+    const course = await Course.findByPk(req.params.id);
+
+    if (course) {
+        if (user.id === course.userId) {
+            await course.destroy();
+            res.status(204).end();
+        } else {
+            res.status(403).json({ message: 'Access Forbidden!' });
+        }    
+    } else {
+        res.status(404).json({ message: 'Course not found' });
+    }
+}));
 
 module.exports = router;
