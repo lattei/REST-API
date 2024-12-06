@@ -13,20 +13,45 @@ module.exports = (sequelize, DataTypes) => {
       // define association here
       // One to one association with Users
       Course.associate = (models) => {
-        Course.belongsTo(models.User, { foreignKey: 'userId',
-          as: 'user'
-        });
+        Course.belongsTo(models.User,  {foreignKey: 'userId'}
+        );
       };
     }
   }
   Course.init({
-    title: DataTypes.STRING,
-    description: DataTypes.TEXT,
+    //Step 8 validation for the properties 400 status code if validation error*
+    title: {
+      type: DataTypes.STRING,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A title is required'
+        },
+        notEmpty: {
+          msg: 'Please provide a title'
+        }
+      }
+    },
+    description: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+      validate: {
+        notNull: {
+          msg: 'A description'
+        },
+        notEmpty: {
+          msg: 'Please provide a description'
+        }
+      }
+    },
     estimatedTime: DataTypes.STRING,
     materialsNeeded: DataTypes.STRING
   }, {
     sequelize,
     modelName: 'Course',
   });
+  Course.associate = (models) => {
+    Course.belongsTo(models.User, { foreignKey: "userId" });
+  };
   return Course;
 };

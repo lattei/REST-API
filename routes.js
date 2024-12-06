@@ -1,8 +1,12 @@
 'use strict';
-// imports - express, router, user and course
+// imports - express, router, user and course, bcrypt for hashing
 const express = require('express');
 const router = express.Router();
 const { User, Course } = require('./models');
+
+
+// Import the auth-user middleware
+const { authenticateUser } = require('./middleware/auth-user');
 
 // Created a handler function as per video to simplify async handling
 function asyncHandler(cb) {
@@ -23,7 +27,7 @@ function asyncHandler(cb) {
 */
 
 // Read route - GET User; this might need to use middleware to authenticate the req... basic auth??
-router.get('/users', /* Placeholder for Auth  */ asyncHandler(async (req, res) => {
+router.get('/users', authenticateUser, asyncHandler(async (req, res) => {
     const user = req.currentUser;
     //ensuring that this returns the specific status code
     res.json({
@@ -87,7 +91,7 @@ router.get('/courses/:id', asyncHandler(async (req, res) => {
 }));
 
 //Creates a course location to header of URI, 200 response /courses
-router.post('/courses', /*Placeholder for Auth */asyncHandler(async (req, res) => {
+router.post('/courses', authenticateUser, asyncHandler(async (req, res) => {
     try {
         const course = await Course.create(req.body);
         res.status(201)
@@ -105,7 +109,8 @@ router.post('/courses', /*Placeholder for Auth */asyncHandler(async (req, res) =
 
 
 //Updates a course, returns a 204 status code /courses/:id
-router.put('/courses/:id', /*Placeholder for Auth */ asyncHandler(async (req, res) => {
+//Complete with Exceeds Expectations, course updates only if User is owner.
+router.put('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const user = req.currentUser;
     const course = await Course.findByPk(req.params.id);
     if (course) {
@@ -121,7 +126,8 @@ router.put('/courses/:id', /*Placeholder for Auth */ asyncHandler(async (req, re
 }));
 
 //Deletes a Course, returns 204 response /courses/:id
-router.delete('/courses/:id', /* Placeholder for Auth */ asyncHandler(async (req, res) => {
+//Exceeds Expectations: Deletes course only if user is owner.
+router.delete('/courses/:id', authenticateUser, asyncHandler(async (req, res) => {
     const user = req.currentUser;
     const course = await Course.findByPk(req.params.id);
 
